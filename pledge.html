@@ -1,0 +1,128 @@
+<!doctype html>
+<!--
+  Afrakoma team site: pledge page.
+  URL: pledge.html?role=desk|panel|callers|director
+  Flow: person enters email + access code, ticks every statement,
+  backend checks the code, confirms the role matches, and logs the pledge.
+  On success the person is signed in for this tab and sent to tasks.html.
+  IMPORTANT: if you change the statements, bump PLEDGE_VERSION in Code.gs.
+-->
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="robots" content="noindex,nofollow">
+<title>Take the pledge | Afrakoma Team</title>
+<link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Montserrat:ital,wght@0,400;0,500;0,600;0,700;1,500&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="assets/site.css">
+</head>
+<body data-page="pledge">
+<div class="wrap">
+
+<header class="top">
+  <a class="mark" href="index.html"><b>Afrakoma</b><span>Scholarships team</span></a>
+  <nav class="nav-top" aria-label="Site"><a href="index.html">Home</a><a href="tasks.html">Your tasks</a></nav>
+</header>
+<ol class="journey" aria-label="Your progress"><li class="done">Choose role</li><li class="done">Training</li><li class="here" aria-current="step">Pledge</li><li>Your tasks</li></ol>
+
+<div class="hero">
+  <h1>Our pledge to every applicant.</h1>
+  <p class="lede">Families trusted us with their documents, their finances and their stories. Before you see any of it, we ask you to promise to protect that trust.</p>
+</div>
+
+<section class="first">
+  <!-- Role chosen on the training page; shown here so people can spot a wrong link -->
+  <p id="role-line" class="sub"></p>
+
+  <form id="pledge-form" class="form" novalidate>
+    <ul class="pledge-list">
+      <li><label><input type="checkbox" required><span>I will keep applicants' information confidential and use it only for my role.</span></label></li>
+      <li><label><input type="checkbox" required><span>I will not download, copy, screenshot, print, forward or share any applicant data, including on WhatsApp.</span></label></li>
+      <li><label><input type="checkbox" required><span>I will declare it before starting if I know an applicant or their family, and step back from their application.</span></label></li>
+      <li><label><input type="checkbox" required><span>I will follow the guidelines for my role and act with honesty and fairness.</span></label></li>
+      <li><label><input type="checkbox" required><span>I will tell the Program Director the same day if I make a mistake or anything is shared by accident.</span></label></li>
+      <li><label><input type="checkbox" required><span>I understand my access is personal, ends with this cycle, and that my actions are recorded with my name.</span></label></li>
+    </ul>
+
+    <div class="field">
+      <label for="email">Your email</label>
+      <input id="email" type="email" autocomplete="email" required>
+    </div>
+    <div class="field">
+      <label for="code">Your access code</label>
+      <input id="code" type="text" autocomplete="off" autocapitalize="characters" spellcheck="false" required>
+      <span class="hint">The Program Director sent you this. It looks like K7M4-QX2P. Do not share it.</span>
+    </div>
+
+    <p id="msg" class="msg err" role="alert" hidden></p>
+    <div><button id="submit" type="submit">Take the pledge</button></div>
+  </form>
+
+  <!-- Shown after a successful pledge -->
+  <div id="done" class="form" hidden>
+    <p id="done-text" class="msg good"></p>
+    <div><a class="btn" href="tasks.html">Go to your tasks</a></div>
+  </div>
+</section>
+
+<footer>
+  <p class="pf">Remember to pay it forward.</p>
+  <p>Questions: <a href="mailto:afrakomascholars@gmail.com">afrakomascholars@gmail.com</a></p>
+</footer>
+</div>
+
+<script src="assets/config.js"></script>
+<script src="assets/app.js"></script>
+<script>
+(function () {
+  'use strict';
+
+  // ---- Which role is this pledge for? --------------------------------------
+  var roleKey = AFK.param('role');
+  var role = AFK.role(roleKey);
+  var roleLine = document.getElementById('role-line');
+  if (!role) {
+    // No or unknown role in the URL: send them back to choose one.
+    roleLine.innerHTML = 'Choose your role first. <a href="index.html#roles">Go to role choice</a>.';
+    document.getElementById('pledge-form').hidden = true;
+    return;
+  }
+  roleLine.innerHTML = 'You are pledging as <b></b>. Wrong role? <a href="index.html#roles">Choose again</a>.';
+  roleLine.querySelector('b').textContent = role.name;
+
+  // ---- Submit ----------------------------------------------------------------
+  var form = document.getElementById('pledge-form');
+  var msg = document.getElementById('msg');
+  var button = document.getElementById('submit');
+
+  form.addEventListener('submit', function (event) {
+    event.preventDefault();
+    AFK.show(msg, '');
+
+    // All statements must be ticked; the backend also requires accepted:true.
+    var unticked = form.querySelectorAll('.pledge-list input:not(:checked)').length;
+    var email = document.getElementById('email').value.trim();
+    var code = document.getElementById('code').value.trim();
+    if (unticked) return AFK.show(msg, 'Tick every statement to take the pledge.');
+    if (!email || !code) return AFK.show(msg, 'Enter your email and access code.');
+
+    button.disabled = true;
+    button.textContent = 'Checking…';
+    AFK.api('pledge', { email: email, code: code, role: roleKey, accepted: true }).then(function (res) {
+      button.disabled = false;
+      button.textContent = 'Take the pledge';
+      if (!res.ok) return AFK.show(msg, res.error);
+
+      // Signed in for this tab; tasks.html reads this.
+      AFK.session.save({ email: email, code: code, name: res.person.name, role: res.person.role, pledged: true });
+      form.hidden = true;
+      document.getElementById('done').hidden = false;
+      document.getElementById('done-text').textContent =
+        'Thank you, ' + res.person.name + '. Your pledge is recorded. Your tasks are unlocked.';
+    });
+  });
+})();
+</script>
+</body>
+</html>
