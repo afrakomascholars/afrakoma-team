@@ -4,9 +4,8 @@
   1. If this tab has no session, ask for email + access code.
   2. Ask the backend for this person's task links (only works after the pledge).
   3. Show role-specific guidance plus the links from the Links tab.
-  Phase 1 (tonight): Desk and Program Director work from Drive links.
-  Phase 2 (Saturday): Panel scoring and caller tools appear in the
-  #tool-area section for those roles.
+  4. Panel, Callers and Program Director also get their tool from
+     assets/tools.js in #tool-area. The Desk works in Drive (links only).
 -->
 <html lang="en">
 <head>
@@ -52,10 +51,11 @@
   <!-- Phase 2 tools (Panel scoring, caller log) will render here -->
   <div id="tool-area" style="margin-top:22px"></div>
 
-  <h2 style="margin-top:30px">Your links</h2>
-  <p class="sub">These open in Google Drive. You only have access to what your role needs.</p>
-  <ul class="links" id="links"></ul>
-  <p id="no-links" class="hint" hidden>No links are set up for your role yet. The Program Director will add them.</p>
+  <div id="links-area">
+    <h2 style="margin-top:30px">Your links</h2>
+    <p class="sub">These open in Google Drive. You only have access to what your role needs.</p>
+    <ul class="links" id="links"></ul>
+  </div>
 </section>
 
 <footer>
@@ -66,6 +66,7 @@
 
 <script src="assets/config.js"></script>
 <script src="assets/app.js"></script>
+<script src="assets/tools.js"></script>
 <script>
 (function () {
   'use strict';
@@ -78,27 +79,25 @@
       steps: [
         'Intake: copy the responses to "2026 Desk Review", resolve duplicates, mark each row Eligible or Not eligible.',
         'Documents: check every upload in Drive and mark Verified, Query or Failed. Send all Queries to the Program Director.',
-        'Blind IDs: once every Query is settled, assign Applicant IDs and build the redacted 2026 Panel Sheet.',
-        'Handoff: when the Program Director approves the final IDs, build the 2026 Winner Call Sheet.'
+        'Blind IDs: once every Query is settled, fill the 2026 Panel Sheet (Applicant ID, aggregate, redacted answers). Tick Ready on each row after a second Desk member has checked the redaction.',
+        'Handoff: fill the 2026 Winner Call Sheet with each Applicant ID and its student, guardian, phone, MoMo number, school and region. Callers see a family only once the Program Director marks it Selected.'
       ]
     },
     panel: {
-      lede: 'You score every application blind, out of 100.',
-      soon: 'Scoring opens here on Saturday, October 3, once the Verification Desk has built the Panel Sheet. You will see one application at a time and score it with the rubric from your training.',
+      lede: 'You score every application blind, out of 100. Pick an application below to start.',
       steps: []
     },
     callers: {
-      lede: 'You bring the good news and confirm each family\'s Mobile Money account.',
-      soon: 'Your call tools open here before calls begin. Every Selected family must be called by Monday, October 5. Until then, re-read the call script in your training.',
+      lede: 'You bring the good news and confirm each family\'s Mobile Money account. Open a family below to start.',
       steps: []
     },
     director: {
       lede: 'You approve the final list, settle exceptions and keep the cycle on time.',
       steps: [
-        'Settle every Desk Query before the Panel Sheet is shared.',
-        'Approve 5 winners and the Reserves from the Panel\'s ranked Applicant IDs.',
-        'Decide any MoMo name mismatch. Pay only the number in the application, by Wednesday, October 7.',
-        'Approve the announcement once all five payments are logged.'
+        'Settle every Desk Query before the Panel Sheet is marked Ready.',
+        'When the Panel has scored, mark each Applicant ID Selected on the board below. This cycle funds up to 7 students.',
+        'Decide any MoMo Check or No match. Pay only the number in the application, by Wednesday, October 7.',
+        'Approve the announcement once every payment is logged.'
       ]
     }
   };
@@ -172,10 +171,17 @@
       li.appendChild(a);
       list.appendChild(li);
     });
-    document.getElementById('no-links').hidden = links.length > 0;
+    document.getElementById('links-area').hidden = links.length === 0;
 
     signinArea.hidden = true;
     taskArea.hidden = false;
+
+    // Role tool (Panel scoring, caller log, Director board). The Desk has none.
+    var toolArea = document.getElementById('tool-area');
+    toolArea.innerHTML = '';
+    var tool = window.AFK_TOOLS && window.AFK_TOOLS[person.role];
+    var creds = AFK.session.get();
+    if (tool && creds) tool(toolArea, { email: creds.email, code: creds.code });
   }
 
   function showSignin(error) {

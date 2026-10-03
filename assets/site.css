@@ -132,3 +132,45 @@ a.role-card .go{margin-top:auto;color:var(--burg);font-weight:600}
 .signedin{display:flex;justify-content:space-between;align-items:center;gap:12px;flex-wrap:wrap;background:#fff;border:1.5px solid var(--line);border-radius:12px;padding:12px 16px;font-size:15px}
 .soon{border:1.5px dashed var(--burg);border-radius:14px;padding:18px;background:#fff}
 [hidden]{display:none!important}
+
+/* ---- Header scale: logo and navigation sit a clear step above body text (16px) ---- */
+header.top{padding:24px 0 6px}
+.mark b{font-size:32px;letter-spacing:-.5px}
+.mark span{font-size:17px;margin-top:2px}
+.nav-top{font-size:18px;gap:24px}
+.journey{font-size:15px;gap:8px}
+.journey li{padding:8px 16px}
+@media (max-width:640px){.mark b{font-size:28px}.mark span{font-size:16px}.nav-top{font-size:17px;gap:18px}.journey{font-size:14px}.journey li{padding:7px 13px}}
+
+/* ---- Role tools on Your tasks (assets/tools.js) ---- */
+.chip{display:inline-block;font-size:13px;font-weight:600;border-radius:999px;padding:3px 10px;margin:4px 6px 4px 0}
+.chip.ok{background:#EEF2EC;color:#3E5A3C}
+.chip.warn{background:#FBF1EC;color:#7A3420}
+.chip.plain{background:var(--tint);color:var(--deep)}
+button.tile.pick{font:inherit;text-align:left;cursor:pointer;color:var(--ink);display:flex;flex-direction:column;align-items:flex-start;gap:6px}
+button.tile.pick:hover{border-color:var(--burg)}
+.tile .go{margin-top:auto;color:var(--burg);font-weight:600}
+.tile .big{font-size:22px;font-weight:700;letter-spacing:.5px;margin:0 0 4px}
+.tile a.btn{margin-top:6px}
+button.back{margin:0 0 16px}
+blockquote.answer{margin:8px 0 20px;padding:16px 18px;background:#fff;border:1.5px solid var(--line);border-left:5px solid var(--burg);border-radius:0 12px 12px 0;white-space:pre-wrap;font-size:17px}
+.scorer{display:grid;gap:4px;margin-top:8px}
+fieldset.crit{border:1.5px solid var(--line);border-radius:14px;background:#fff;padding:14px 16px 12px;margin:0 0 12px}
+fieldset.crit legend{padding:0 6px;font-size:17px}
+.wt{font-weight:500;color:var(--burg);font-size:14px;margin-left:8px}
+.opt{display:flex;gap:12px;align-items:flex-start;padding:7px 8px;border-radius:10px;cursor:pointer;min-height:44px}
+.opt:hover{background:var(--tint)}
+.opt input{position:absolute;opacity:0;width:1px;height:1px}
+.opt .sc{flex:0 0 34px;height:34px;border-radius:50%;border:2px solid var(--line);display:grid;place-items:center;font-weight:700}
+.opt input:checked+.sc{background:var(--burg);border-color:var(--burg);color:#fff}
+.opt input:focus-visible+.sc{outline:3px solid var(--burg);outline-offset:2px}
+.opt .tx{padding-top:5px}
+.totalbox{display:flex;align-items:baseline;gap:14px;flex-wrap:wrap;background:var(--deep);color:#fff;border-radius:14px;padding:16px 22px;margin:4px 0 12px}
+.totalbox .n{font-size:40px;font-weight:700;letter-spacing:-1px;line-height:1}
+.form.wide{max-width:none}
+.form select,.form textarea{font:inherit;padding:11px 12px;border:1.5px solid var(--line);border-radius:10px;background:#fff;min-height:44px;width:100%}
+.form textarea{resize:vertical}
+pre.calllog{font-family:inherit;white-space:pre-wrap;background:#fff;border:1.5px solid var(--line);border-radius:12px;padding:12px 14px;margin:6px 0 10px;font-size:15px}
+.quick{display:flex;flex-wrap:wrap;gap:8px;margin:0 0 18px}
+.between{display:flex;justify-content:space-between;align-items:center;gap:12px;flex-wrap:wrap;margin-bottom:12px}
+td select{font:inherit;padding:6px 8px;border:1.5px solid var(--line);border-radius:8px;background:#fff;min-height:40px}
