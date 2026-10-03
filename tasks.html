@@ -1,0 +1,210 @@
+<!doctype html>
+<!--
+  Afrakoma team site: "Your tasks" page.
+  1. If this tab has no session, ask for email + access code.
+  2. Ask the backend for this person's task links (only works after the pledge).
+  3. Show role-specific guidance plus the links from the Links tab.
+  Phase 1 (tonight): Desk and Program Director work from Drive links.
+  Phase 2 (Saturday): Panel scoring and caller tools appear in the
+  #tool-area section for those roles.
+-->
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="robots" content="noindex,nofollow">
+<title>Your tasks | Afrakoma Team</title>
+<link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Montserrat:ital,wght@0,400;0,500;0,600;0,700;1,500&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="assets/site.css">
+</head>
+<body data-page="tasks">
+<div class="wrap">
+
+<header class="top">
+  <a class="mark" href="index.html"><b>Afrakoma</b><span>Scholarships team</span></a>
+  <nav class="nav-top" aria-label="Site"><a href="index.html">Home</a><a id="nav-training" href="index.html#roles">Training</a></nav>
+</header>
+<ol class="journey" aria-label="Your progress"><li class="done">Choose role</li><li class="done">Training</li><li class="done">Pledge</li><li class="here" aria-current="step">Your tasks</li></ol>
+
+<div class="hero">
+  <h1 id="title">Your tasks</h1>
+  <p class="lede" id="lede">Sign in with the email and access code from the Program Director.</p>
+</div>
+
+<!-- Sign-in (shown when this tab has no session) -->
+<section class="first" id="signin-area" hidden>
+  <form id="signin-form" class="form" novalidate>
+    <div class="field"><label for="email">Your email</label><input id="email" type="email" autocomplete="email" required></div>
+    <div class="field"><label for="code">Your access code</label><input id="code" type="text" autocomplete="off" autocapitalize="characters" spellcheck="false" required></div>
+    <p id="signin-msg" class="msg err" role="alert" hidden></p>
+    <div><button id="signin-btn" type="submit">Show my tasks</button></div>
+    <p class="hint">Haven't taken the pledge yet? <a href="index.html#roles">Choose your role and do the training first.</a></p>
+  </form>
+</section>
+
+<!-- Task view (filled in by the script below) -->
+<section class="first" id="task-area" hidden>
+  <div class="signedin"><span id="who"></span><button class="ghost reset" id="signout" type="button">Sign out</button></div>
+
+  <div id="guide" style="margin-top:22px"></div>
+
+  <!-- Phase 2 tools (Panel scoring, caller log) will render here -->
+  <div id="tool-area" style="margin-top:22px"></div>
+
+  <h2 style="margin-top:30px">Your links</h2>
+  <p class="sub">These open in Google Drive. You only have access to what your role needs.</p>
+  <ul class="links" id="links"></ul>
+  <p id="no-links" class="hint" hidden>No links are set up for your role yet. The Program Director will add them.</p>
+</section>
+
+<footer>
+  <p class="pf">Remember to pay it forward.</p>
+  <p>Questions: <a href="mailto:afrakomascholars@gmail.com">afrakomascholars@gmail.com</a></p>
+</footer>
+</div>
+
+<script src="assets/config.js"></script>
+<script src="assets/app.js"></script>
+<script>
+(function () {
+  'use strict';
+
+  // ---- Role-specific guidance shown above the links ------------------------
+  // Plain text only (rendered with textContent). Edit freely.
+  var GUIDE = {
+    desk: {
+      lede: 'You work directly in Google Drive. Nothing about applicants is shown on this site.',
+      steps: [
+        'Intake: copy the responses to "2026 Desk Review", resolve duplicates, mark each row Eligible or Not eligible.',
+        'Documents: check every upload in Drive and mark Verified, Query or Failed. Send all Queries to the Program Director.',
+        'Blind IDs: once every Query is settled, assign Applicant IDs and build the redacted 2026 Panel Sheet.',
+        'Handoff: when the Program Director approves the final IDs, build the 2026 Winner Call Sheet.'
+      ]
+    },
+    panel: {
+      lede: 'You score every application blind, out of 100.',
+      soon: 'Scoring opens here on Saturday, October 3, once the Verification Desk has built the Panel Sheet. You will see one application at a time and score it with the rubric from your training.',
+      steps: []
+    },
+    callers: {
+      lede: 'You bring the good news and confirm each family\'s Mobile Money account.',
+      soon: 'Your call tools open here before calls begin. Every Selected family must be called by Monday, October 5. Until then, re-read the call script in your training.',
+      steps: []
+    },
+    director: {
+      lede: 'You approve the final list, settle exceptions and keep the cycle on time.',
+      steps: [
+        'Settle every Desk Query before the Panel Sheet is shared.',
+        'Approve 5 winners and the Reserves from the Panel\'s ranked Applicant IDs.',
+        'Decide any MoMo name mismatch. Pay only the number in the application, by Wednesday, October 7.',
+        'Approve the announcement once all five payments are logged.'
+      ]
+    }
+  };
+
+  var signinArea = document.getElementById('signin-area');
+  var taskArea = document.getElementById('task-area');
+
+  // ---- Load tasks for a signed-in person ------------------------------------
+  function loadTasks(creds) {
+    return AFK.api('tasks', { email: creds.email, code: creds.code }).then(function (res) {
+      if (!res.ok) {
+        AFK.session.clear();
+        showSignin(res.error);
+        return;
+      }
+      AFK.session.save({ email: creds.email, code: creds.code, name: res.person.name, role: res.person.role, pledged: true });
+      render(res.person, res.links || []);
+    });
+  }
+
+  // ---- Draw the task view ---------------------------------------------------
+  function render(person, links) {
+    var role = AFK.role(person.role) || { name: person.role, training: 'index.html#roles' };
+    var guide = GUIDE[person.role] || { lede: '', steps: [] };
+
+    document.getElementById('title').textContent = role.name + ': your tasks';
+    document.getElementById('lede').textContent = guide.lede;
+    document.getElementById('who').textContent = 'Signed in as ' + person.name + ' (' + role.name + ')';
+    document.getElementById('nav-training').href = role.training;
+
+    // Guidance: either "coming soon" or a numbered list of what to do.
+    var guideEl = document.getElementById('guide');
+    guideEl.innerHTML = '';
+    if (guide.soon) {
+      var soon = document.createElement('div');
+      soon.className = 'soon';
+      soon.textContent = guide.soon;
+      guideEl.appendChild(soon);
+    }
+    if (guide.steps.length) {
+      var ol = document.createElement('ol');
+      ol.className = 'steps';
+      guide.steps.forEach(function (text) {
+        var li = document.createElement('li');
+        var p = document.createElement('p');
+        p.style.paddingTop = '7px';
+        p.textContent = text;
+        li.appendChild(p);
+        ol.appendChild(li);
+      });
+      guideEl.appendChild(ol);
+    }
+
+    // Links from the backend. Built with DOM methods, never innerHTML, so sheet
+    // content can't inject markup.
+    var list = document.getElementById('links');
+    list.innerHTML = '';
+    links.forEach(function (l) {
+      var li = document.createElement('li');
+      var a = document.createElement('a');
+      a.href = l.url;
+      a.target = '_blank';
+      a.rel = 'noopener';
+      a.textContent = l.label;
+      if (l.note) {
+        var n = document.createElement('span');
+        n.className = 'n';
+        n.textContent = l.note;
+        a.appendChild(n);
+      }
+      li.appendChild(a);
+      list.appendChild(li);
+    });
+    document.getElementById('no-links').hidden = links.length > 0;
+
+    signinArea.hidden = true;
+    taskArea.hidden = false;
+  }
+
+  function showSignin(error) {
+    taskArea.hidden = true;
+    signinArea.hidden = false;
+    AFK.show(document.getElementById('signin-msg'), error || '');
+  }
+
+  // ---- Sign-in form ---------------------------------------------------------
+  document.getElementById('signin-form').addEventListener('submit', function (event) {
+    event.preventDefault();
+    var email = document.getElementById('email').value.trim();
+    var code = document.getElementById('code').value.trim();
+    if (!email || !code) return showSignin('Enter your email and access code.');
+    var btn = document.getElementById('signin-btn');
+    btn.disabled = true; btn.textContent = 'Checking…';
+    loadTasks({ email: email, code: code }).then(function () { btn.disabled = false; btn.textContent = 'Show my tasks'; });
+  });
+
+  document.getElementById('signout').addEventListener('click', function () {
+    AFK.session.clear();
+    showSignin('');
+  });
+
+  // ---- Start ----------------------------------------------------------------
+  var existing = AFK.session.get();
+  if (existing && existing.email && existing.code) loadTasks(existing);
+  else showSignin('');
+})();
+</script>
+</body>
+</html>
